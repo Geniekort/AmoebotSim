@@ -92,7 +92,7 @@ protected:
 
         struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated;};
         struct triangle_shift_ShiftToken: public Token{int _level; int _left; int _dirpassed;};
-        struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _shiftdir;};
+        struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _relShiftdir;};
 
 
     private:
@@ -108,6 +108,7 @@ protected:
 
         void triangle_shift_coordinatorActivate();
         void triangle_shift_particleActivate();
+        void triangle_shift_createMovementInitToken(std::shared_ptr<triangle_shift_ShiftToken> shiftToken);
 
         void triangle_expand_coordinatorActivate();
         void triangle_expand_particleActivate();
