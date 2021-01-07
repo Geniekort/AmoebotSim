@@ -20,7 +20,7 @@ GSFParticle::GSFParticle(Node& head, const int globalTailDir,
 void GSFParticle::activate(){
     chain_activate();
     triangle_shift_activate();
-    // triangle_expand_activate();
+    triangle_expand_activate();
 
 }
 
@@ -60,12 +60,19 @@ QString GSFParticle::inspectionText() const{
     }();
     text += " level: " + QString::number(_level) + "\n";
     text += " depth: " + QString::number(_depth) + "\n";
+    text += " triangleDirection: " + QString::number(_triangleDirection) + "\n";
 
     if(hasToken<chain_ContractToken>()){
         text+= "has contractToken\n";
     }
     if(hasToken<chain_ChainToken>()){
+        auto t = peekAtToken<chain_ChainToken>();
         text+= "has chainToken\n";
+        if(t->L.empty()){
+            text+= "stack L is empty\n";
+        } else {
+            text+= "stack L is not empty\n";
+        }
     }
     if(hasToken<chain_ConfirmContractToken>()){
         text+= "has chainToken\n";
@@ -88,38 +95,45 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<triangle_shift_ConfirmShiftToken>()){
         text+= "has triangle_shift_ConfirmShiftToken\n";
     }
+    if(hasToken<triangle_expand_ConfirmExpandToken>()){
+        text+= "has triangle_expand_ConfirmExpandToken\n";
+    }else{
+        text+= "NOPE!\n";
+    }
     if(hasToken<triangle_expand_ExpandToken>()){
-        text+= "has triangle_expand_ExpandToken\n";
+        text+= "has a triangle_expand_ExpandToken\n";
+    }
+    if(hasToken<chain_MovementInitToken>()){
+        text+= "has a chain_MovementInitToken\n";
     }
     return text;
 }
 
-GSFSystem::GSFSystem(int sideLen, int shiftdir){
+GSFSystem::GSFSystem(int sideLen, QString expanddir){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
     auto coordinator = new GSFParticle(current, -1, 0, *this, sideLen, dir,
                                         GSFParticle::State::COORDINATOR, 0, -1, 0);
 
-    //TESTTTTTT
-        //debug token for some movement protocol using chains
-        auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
-        token->_dir = shiftdir % 6;
-        coordinator->putToken(token);
-    //TESTTTTTT
 
+    // example for initiating shift
+    //    auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
+    //    token->_dir = shiftdir % 6;
+    //    coordinator->putToken(token);
+    //
 
     insert(coordinator);
 
-//    auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
+    auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
 
-//    if(expanddir == "l"){
-//        expandToken->_left = true;
-//    } else {
-//        expandToken->_left = false;
-//    }
+    if(expanddir == "l"){
+        expandToken->_left = true;
+    } else {
+        expandToken->_left = false;
+    }
 
-//    coordinator->putToken(expandToken);
+    coordinator->putToken(expandToken);
 
 
     current = current.nodeInDir(dir%6);
