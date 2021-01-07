@@ -35,7 +35,7 @@ void GSFParticle::chain_activate(){
 
 void GSFParticle::chain_handleContractToken()
 {
-    Q_ASSERT(_state == State::CHAIN_FOLLOWER);
+    Q_ASSERT(_state == State::CHAIN_FOLLOWER || (_state == State::COORDINATOR && !hasToken<triangle_shift_TriggerShiftToken>()));
     auto token = peekAtToken<chain_ContractToken>();
 
     int followerLabel = -1;

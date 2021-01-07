@@ -77,9 +77,6 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<chain_ConfirmContractToken>()){
         text+= "has chainToken\n";
     }
-    if (hasToken<triangle_shift_CoordinatorToken>()){
-        text += "has shift coordinator token";
-    }
     if (hasToken<triangle_shift_TriggerShiftToken>()){
         text += "has trigger shift Token";
     }
@@ -94,6 +91,9 @@ QString GSFParticle::inspectionText() const{
     }
     if(hasToken<triangle_expand_TriggerExpandToken>()){
         text+= "has triangle_expand_TriggerExpandToken\n";
+    }
+    if(hasToken<triangle_shift_ConfirmShiftToken>()){
+        text+= "has triangle_shift_ConfirmShiftToken\n";
     }
     if(hasToken<triangle_expand_ConfirmExpandToken>()){
         text+= "has triangle_expand_ConfirmExpandToken\n";
@@ -115,6 +115,13 @@ GSFSystem::GSFSystem(int sideLen, QString expanddir){
     Node current(0,0);
     auto coordinator = new GSFParticle(current, -1, 0, *this, sideLen, dir,
                                         GSFParticle::State::COORDINATOR, 0, -1, 0);
+
+
+    // example for initiating shift
+    //    auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
+    //    token->_dir = shiftdir % 6;
+    //    coordinator->putToken(token);
+    //
 
     insert(coordinator);
 
