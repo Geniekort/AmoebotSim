@@ -90,9 +90,10 @@ protected:
         // in chain token
         struct chain_ConfirmContractToken : public Token{};
 
-        struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated;};
-        struct triangle_shift_ShiftToken: public Token{int _level; int _left; int _dirpassed;};
-        struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _relShiftdir;};
+        struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated=false;};
+        struct triangle_shift_ShiftToken: public Token{int _left; int _dirpassed;};
+        struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _relShiftdir; bool _shiftDone=false;};
+        struct triangle_shift_ConfirmShiftToken: public Token{int _dirpassed;};
 
 
     private:
@@ -102,19 +103,19 @@ protected:
         void chain_handleMovementInitToken();
         void chain_handleDepthToken();
         void chain_handleConfirmContractToken();
-        void triangle_expand_activate();
 
+        void triangle_expand_activate();
         void triangle_shift_activate();
 
         void triangle_shift_coordinatorActivate();
         void triangle_shift_particleActivate();
+        void triangle_shift_passCoordinatorToken(std::shared_ptr<triangle_shift_TriggerShiftToken> triggerToken);
         void triangle_shift_createMovementInitToken(std::shared_ptr<triangle_shift_ShiftToken> shiftToken);
 
         void triangle_expand_coordinatorActivate();
         void triangle_expand_particleActivate();
         void triangle_expand_createMovementInitToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
         void triangle_expand_forwardExpandToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
-
 };
 
 class GSFSystem:public AmoebotSystem{
