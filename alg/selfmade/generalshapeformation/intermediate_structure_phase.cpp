@@ -78,7 +78,13 @@ void GSFParticle::intermediate_activate_1b(std::shared_ptr<intermediate_TriggerI
         }
         triggerToken->_running_l--;
 
-        forwardLeadership(triggerToken, transferDir);
+        if(hasNbrAtLabel(transferDir)){
+            forwardLeadership(triggerToken, transferDir);
+        }else{
+            // The edge of the triangle left has less than l particles, so we are DONE!
+            takeToken<intermediate_TriggerIntermediateToken>();
+            // FINISHED!!
+        }
     }
 }
 
