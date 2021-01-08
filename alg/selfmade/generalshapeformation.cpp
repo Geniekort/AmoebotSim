@@ -75,7 +75,7 @@ QString GSFParticle::inspectionText() const{
         }
     }
     if(hasToken<chain_ConfirmContractToken>()){
-        text+= "has chainToken\n";
+        text+= "has chain_ConfirmContractToken\n";
     }
     if (hasToken<triangle_shift_TriggerShiftToken>()){
         text += "has trigger shift Token";

@@ -4,6 +4,11 @@
 
 // All methods required to perform a Chain movement
 void GSFParticle::chain_activate(){
+    //if follower is contracted, send confirmation token allong the chain
+    if(hasToken<chain_ConfirmContractToken>()){
+        chain_handleConfirmContractToken();
+    }
+
     if(hasToken<chain_ChainToken>()){
         chain_handleChainToken();
     }
@@ -22,10 +27,7 @@ void GSFParticle::chain_activate(){
         chain_handleDepthToken();
     }
 
-    //if follower is contracted, send confirmation token allong the chain
-    if(hasToken<chain_ConfirmContractToken>()){
-        chain_handleConfirmContractToken();
-    }
+
 
     //If a contract token is receive a particle in the chain wil try to contract
     if(hasToken<chain_ContractToken>()){
@@ -52,7 +54,6 @@ void GSFParticle::chain_handleContractToken()
                 if(nbrAtLabel(label)._ldrlabel>-1 &&
                         pointsAtMe(nbrAtLabel(label), nbrAtLabel(label).dirToHeadLabel(nbrAtLabel(label)._ldrlabel))){
                     followerLabel = label;
-                    qDebug() << "neighbour found at label " << QString::number(followerLabel);
                     break;
                 }
             }
@@ -62,7 +63,10 @@ void GSFParticle::chain_handleContractToken()
                 auto follower = nbrAtLabel(followerLabel);
                 if(token->_final){
                     if(nbrAtLabel(followerLabel).isExpanded()){
-                        nbrAtLabel(followerLabel).putToken(token);
+                        // Only pass if nbr has not already ContractToken
+                        if(!nbrAtLabel(followerLabel).hasToken<chain_ContractToken>()){
+                            nbrAtLabel(followerLabel).putToken(token);
+                        }
                     } else {
                         nbrAtLabel(followerLabel)._ldrlabel =
                                     dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
@@ -73,7 +77,10 @@ void GSFParticle::chain_handleContractToken()
                     auto nbr = nbrAtLabel(followerLabel);
                     if(nbr.isExpanded()){
                         if(!_sent_pull){
-                            nbrAtLabel(followerLabel).putToken(token);
+                            // Only pass if nbr has not already ContractToken
+                            if(!nbrAtLabel(followerLabel).hasToken<chain_ContractToken>()){
+                                nbrAtLabel(followerLabel).putToken(token);
+                            }
                             _sent_pull = true;
                         }
 
@@ -87,14 +94,7 @@ void GSFParticle::chain_handleContractToken()
                 }
             } else {
                 token = takeToken<chain_ContractToken>();
-                contractTail();
-                if(token->_final){
-                    if(isContracted()){
-                        Q_ASSERT(hasNbrAtLabel(_ldrlabel));
-                        auto t = std::make_shared<chain_ConfirmContractToken>();
-                        nbrAtLabel(_ldrlabel).putToken(t);
-                    }
-                }
+                contractTail();                
             }
         }
     } else {
@@ -109,7 +109,6 @@ void GSFParticle::chain_handleContractToken()
                         pointsAtMe(nbrAtLabel(label),
                                    nbrAtLabel(label).dirToHeadLabel(nbrAtLabel(label)._ldrlabel))){
                     followerLabel = label;
-                    qDebug() << "neighbour found at label " << QString::number(followerLabel);
                     break;
                 }
             }
@@ -117,7 +116,10 @@ void GSFParticle::chain_handleContractToken()
         if(followerLabel != -2){
             if(followerLabel>-1){
                 token = takeToken<chain_ContractToken>();
-                nbrAtLabel(followerLabel).putToken(token);
+                // Only pass if nbr has not already ContractToken
+                if(!nbrAtLabel(followerLabel).hasToken<chain_ContractToken>()){
+                    nbrAtLabel(followerLabel).putToken(token);
+                }
             } else {
                 token = takeToken<chain_ContractToken>();
                 if(token->_final){
@@ -179,6 +181,11 @@ void GSFParticle::chain_handleDepthToken()
 void GSFParticle::chain_handleConfirmContractToken()
 {
     auto token = takeToken<chain_ConfirmContractToken>();
+
+    if(hasToken<chain_ContractToken>()){
+        auto contract_token = takeToken<chain_ContractToken>();
+    }
+
     if(_state == State::CHAIN_FOLLOWER){
         if(isContracted()){
             if(_ldrlabel>-1){
@@ -186,12 +193,17 @@ void GSFParticle::chain_handleConfirmContractToken()
                 nbrAtLabel(_ldrlabel).putToken(token);
             }
         }
+    }else if(isContracted() && (_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR)){
+        auto token = takeToken<chain_ChainToken>();
+        _state = State::CHAIN_FOLLOWER;
+        _ldrlabel = -1;
     }
 }
 
 
 void GSFParticle::chain_handleChainToken(){
     Q_ASSERT(_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR);
+
     auto token = peekAtToken<chain_ChainToken>();
     int followerLabel = -1;
 
@@ -226,7 +238,10 @@ void GSFParticle::chain_handleChainToken(){
                 } else {
                     auto t = std::make_shared<chain_ContractToken>();
                     t->_final = true;
-                    nbrAtLabel(followerLabel).putToken(t);
+                    // Only pass if nbr has not already ContractToken
+                    if(!nbrAtLabel(followerLabel).hasToken<chain_ContractToken>()){
+                        nbrAtLabel(followerLabel).putToken(t);
+                    }
                 }
             }
         }
@@ -301,10 +316,5 @@ void GSFParticle::chain_handleChainToken(){
             }
         }
     }
-    if(hasToken<chain_ConfirmContractToken>()){
-        auto token = takeToken<chain_ChainToken>();
-        auto token2 = takeToken<chain_ConfirmContractToken>();
-        _state = State::CHAIN_FOLLOWER;
-        _ldrlabel = -1;
-    }
+
 }
