@@ -53,6 +53,7 @@ SOURCES += \
     alg/infobjcoating.cpp \
     alg/selfmade/generalshapeformation.cpp \
     alg/selfmade/generalshapeformation/chain_phase.cpp \
+    alg/selfmade/generalshapeformation/intermediate_structure_phase.cpp \
     alg/selfmade/generalshapeformation/triangle_expand_phase.cpp \
     alg/selfmade/generalshapeformation/triangle_shift_phase.cpp \
     alg/shapeformation.cpp \

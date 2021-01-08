@@ -23,12 +23,6 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
                 }else{
                     _triangleDirection = (_triangleDirection + 1) % 6;
                 }
-
-                // DEBUG: TRYING TO KEEP ROTATING
-                auto newExpandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
-                newExpandToken->_left = expandToken->_left;
-
-                putToken(newExpandToken);
             }
 
         }else{

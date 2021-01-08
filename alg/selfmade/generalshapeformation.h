@@ -41,6 +41,8 @@ class GSFParticle:public AmoebotParticle{
         GSFParticle& nbrAtLabel(int label) const;
 
 
+        int findFollower();
+
 protected:
         //private vars
         const int _initialSideLen;
@@ -93,10 +95,24 @@ protected:
         // in chain token
         struct chain_ConfirmContractToken : public Token{};
 
+        struct chain_ResetChainToken : public Token{};
+        struct chain_ConfirmResetChainToken : public Token{};
+
+        // Used to indicate the end of a chain, when the final particle might still have a neighbor, but we do not want to include it in the chain.
+        // _handled indicates whether this token was just put here or already processed by the node
+        struct chain_CutoffToken : public Token{int _dirpassed; bool _handled = false;};
+        struct chain_ConfirmCutoffToken : public Token{int _dirpassed;};
+
         struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated=false;};
         struct triangle_shift_ShiftToken: public Token{int _left; int _dirpassed;};
         struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _relShiftdir; bool _shiftDone=false;};
         struct triangle_shift_ConfirmShiftToken: public Token{int _dirpassed;};
+
+        // _l: the desired height of the intermediate structure. _step: in which phase the process is currently (as documented in the report
+        // _up: whether we are in the phase where the triangle was initially pointing upwards.
+        // _running_l: used in step 1b, to keep track of how many steps are taken up already
+        // _initiated: to indicate whether a step is already initiated (and particle is waiting), or should still be initiated. Only used in some specific steps.
+        struct intermediate_TriggerIntermediateToken: public Token{int _l; QString _step="1a"; bool _up=true; int _running_l; bool _initiated = false;};
 
 
     private:
@@ -122,11 +138,30 @@ protected:
 
         void triangle_expand_handleTriggerExpandToken();
         void triangle_expand_handleConfirmExpandToken();
+
+        void intermediate_activate();
+        void intermediate_activate_1a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_1b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void forwardLeadership(std::shared_ptr<intermediate_TriggerIntermediateToken> token, int dir);
+        void intermediate_activate_2a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_2b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void chain_handleCutoffToken();
+        void chain_handleConfirmCutoffToken();
+        void intermediate_activate_3(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_4a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_4b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_5(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_6a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_6b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void intermediate_activate_7(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void rotateA(QString nextStep, std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void rotateB(QString nextStep, std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
+        void chain_handleResetChainTokens();
 };
 
 class GSFSystem:public AmoebotSystem{
     public:
-        GSFSystem(int sideLen = 6, QString expanddir="l");
+        GSFSystem(int sideLen = 6, int l = 2);
 
 
 private:

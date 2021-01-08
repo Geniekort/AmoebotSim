@@ -4,6 +4,13 @@
 
 // All methods required to perform a Chain movement
 void GSFParticle::chain_activate(){
+    // used for ensure that a chain has descending depth
+    // depth i means that some particle is the ith particle
+    // in a chain
+    if(hasToken<chain_DepthToken>()){
+        chain_handleDepthToken();
+    }
+
     //if follower is contracted, send confirmation token allong the chain
     if(hasToken<chain_ConfirmContractToken>()){
         chain_handleConfirmContractToken();
@@ -20,18 +27,56 @@ void GSFParticle::chain_activate(){
         chain_handleMovementInitToken();
     }
 
-    // used for ensure that a chain has descending depth
-    // depth i means that some particle is the ith particle
-    // in a chain
-    if(hasToken<chain_DepthToken>()){
-        chain_handleDepthToken();
+    if(hasToken<chain_ResetChainToken>() || hasToken<chain_ConfirmResetChainToken>()){
+        chain_handleResetChainTokens();
     }
+
 
 
 
     //If a contract token is receive a particle in the chain wil try to contract
     if(hasToken<chain_ContractToken>()){
         chain_handleContractToken();
+    }
+
+    if(hasToken<chain_CutoffToken>()){
+        chain_handleCutoffToken();
+    }
+
+    if(hasToken<chain_ConfirmCutoffToken>()){
+        chain_handleConfirmCutoffToken();
+    }
+}
+
+void GSFParticle::chain_handleCutoffToken(){
+    auto token = peekAtToken<chain_CutoffToken>();
+
+    if(token->_handled){
+        return;
+    }
+
+    if(hasNbrAtLabel(token->_dirpassed)){
+        // copy cutoff token to neighbor if not already done
+        if(!nbrAtLabel(token->_dirpassed).hasToken<chain_CutoffToken>()){
+            auto cutoffToken = std::make_shared<GSFParticle::chain_CutoffToken>();
+            cutoffToken->_dirpassed = token->_dirpassed;
+            nbrAtLabel(token->_dirpassed).putToken(cutoffToken);
+        }
+    }else{
+        auto confirmCutoffToken = std::make_shared<GSFParticle::chain_ConfirmCutoffToken>();
+        confirmCutoffToken->_dirpassed = (token->_dirpassed + 3) %6;
+        putToken(confirmCutoffToken);
+    }
+
+    token->_handled = true;
+}
+
+void GSFParticle::chain_handleConfirmCutoffToken(){
+    auto token = peekAtToken<chain_ConfirmCutoffToken>();
+    if(hasNbrAtLabel(token->_dirpassed)){
+        // forward token to neighbor
+        auto confirmToken = takeToken<chain_ConfirmCutoffToken>();
+        nbrAtLabel(token->_dirpassed).putToken(confirmToken);
     }
 }
 
@@ -137,6 +182,7 @@ void GSFParticle::chain_handleContractToken()
 // FOR DEBUG PURPOSES ONLY
 void GSFParticle::chain_handleMovementInitToken()
 {
+    _ldrlabel = -1;
     auto token = takeToken<chain_MovementInitToken>();
 
     //pass token to next particle along the side of the triangle if necissary
@@ -154,7 +200,6 @@ void GSFParticle::chain_handleMovementInitToken()
 
 
     putToken(chainToken);
-    _ldrlabel = -1;
 
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
@@ -173,9 +218,24 @@ void GSFParticle::chain_handleDepthToken()
     Q_ASSERT(_state == State::CHAIN_FOLLOWER);
     auto token = takeToken<chain_DepthToken>();
     _ldrlabel = (token->_passeddir+3)%6;
-    if(hasNbrAtLabel(token->_passeddir)){
+    if(hasToken<chain_CutoffToken>()){
+        takeToken<chain_CutoffToken>();
+    }else if(hasNbrAtLabel(token->_passeddir)){
         nbrAtLabel(token->_passeddir).putToken(token);
     }
+}
+
+int GSFParticle::findFollower()
+{
+    for(int label : headLabels()){
+        if(hasNbrAtLabel(label)){
+            auto nbr = nbrAtLabel(label);
+            if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                return label;
+            }
+        }
+    }
+    return -1;
 }
 
 void GSFParticle::chain_handleConfirmContractToken()
@@ -194,9 +254,43 @@ void GSFParticle::chain_handleConfirmContractToken()
             }
         }
     }else if(isContracted() && (_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR)){
-        auto token = takeToken<chain_ChainToken>();
-        _state = State::CHAIN_FOLLOWER;
-        _ldrlabel = -1;
+        if(hasToken<chain_ConfirmResetChainToken>()){
+            auto _ = takeToken<chain_ConfirmResetChainToken>();
+            auto token = takeToken<chain_ChainToken>();
+            _state = State::CHAIN_FOLLOWER;
+            _ldrlabel = -1;
+        }else{
+            int followerLabel = findFollower();
+            if(followerLabel > -1 && !nbrAtLabel(followerLabel).hasToken<chain_ResetChainToken>()){
+                auto resetToken = std::make_shared<chain_ResetChainToken>();
+                nbrAtLabel(followerLabel).putToken(resetToken);
+            }
+        }
+
+    }
+}
+
+void GSFParticle::chain_handleResetChainTokens(){
+    if(_state == State::CHAIN_FOLLOWER){
+        if(hasToken<chain_ResetChainToken>()){
+            int followerLabel = findFollower();
+            if(followerLabel > -1 && !nbrAtLabel(followerLabel).hasToken<chain_ResetChainToken>()){
+                auto resetToken = takeToken<chain_ResetChainToken>();
+                nbrAtLabel(followerLabel).putToken(resetToken);
+            }else if(followerLabel == -1){
+                auto _ = takeToken<chain_ResetChainToken>();
+                auto resetToken = std::make_shared<chain_ConfirmResetChainToken>();
+                putToken(resetToken);
+            }
+        }
+
+        if(hasToken<chain_ConfirmResetChainToken>()){
+            auto confirmToken = takeToken<chain_ConfirmResetChainToken>();
+            nbrAtLabel(_ldrlabel).putToken(confirmToken);
+
+            // Reset particle completely from chain movement
+            _ldrlabel = -1;
+        }
     }
 }
 

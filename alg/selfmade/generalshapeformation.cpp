@@ -18,10 +18,10 @@ GSFParticle::GSFParticle(Node& head, const int globalTailDir,
 
 //Implement activate
 void GSFParticle::activate(){
+    intermediate_activate();
     chain_activate();
     triangle_shift_activate();
     triangle_expand_activate();
-
 }
 
 GSFParticle& GSFParticle::nbrAtLabel(int label) const {
@@ -61,6 +61,7 @@ QString GSFParticle::inspectionText() const{
     text += " level: " + QString::number(_level) + "\n";
     text += " depth: " + QString::number(_depth) + "\n";
     text += " triangleDirection: " + QString::number(_triangleDirection) + "\n";
+    text += " _ldrlabel: " + QString::number(_ldrlabel) + "\n";
 
     if(hasToken<chain_ContractToken>()){
         text+= "has contractToken\n";
@@ -78,16 +79,22 @@ QString GSFParticle::inspectionText() const{
         text+= "has chain_ConfirmContractToken\n";
     }
     if (hasToken<triangle_shift_TriggerShiftToken>()){
-        text += "has trigger shift Token";
+        text += "has triangle_shift_TriggerShiftToken\n";
     }
     if (hasToken<triangle_shift_CoordinatorToken>()){
-        text += "has coordinator shift Token";
+        text += "has triangle_shift_CoordinatorToken\n";
     }
     if (hasToken<triangle_shift_ShiftToken>()){
-        text += "has shiftToken";
+        text += "has shiftToken\n";
     }
     if(hasToken<chain_DepthToken>()){
         text+= "has depthToken\n";
+    }
+    if(hasToken<chain_ResetChainToken>()){
+        text+= "has chain_ResetChainToken\n";
+    }
+    if(hasToken<chain_ConfirmResetChainToken>()){
+        text+= "has chain_ConfirmResetChainToken\n";
     }
     if(hasToken<triangle_expand_TriggerExpandToken>()){
         text+= "has triangle_expand_TriggerExpandToken\n";
@@ -97,8 +104,6 @@ QString GSFParticle::inspectionText() const{
     }
     if(hasToken<triangle_expand_ConfirmExpandToken>()){
         text+= "has triangle_expand_ConfirmExpandToken\n";
-    }else{
-        text+= "NOPE!\n";
     }
     if(hasToken<triangle_expand_ExpandToken>()){
         text+= "has a triangle_expand_ExpandToken\n";
@@ -106,16 +111,30 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<chain_MovementInitToken>()){
         text+= "has a chain_MovementInitToken\n";
     }
+    if(hasToken<chain_CutoffToken>()){
+        text+= "has a chain_CutoffToken\n";
+    }
+    if(hasToken<chain_ConfirmCutoffToken>()){
+        text+= "has a chain_ConfirmCutoffToken\n";
+    }
+
+    if(hasToken<intermediate_TriggerIntermediateToken>()){
+        auto token = peekAtToken<intermediate_TriggerIntermediateToken>();
+        text+= "has a intermediate_TriggerIntermediateToken\n";
+        text+= "    step: " + token->_step + "\n";
+        text+= "    initiated: " + QString::number(token->_initiated) + "\n";
+    }
     return text;
 }
 
-GSFSystem::GSFSystem(int sideLen, QString expanddir){
+GSFSystem::GSFSystem(int sideLen, int l){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
     auto coordinator = new GSFParticle(current, -1, 0, *this, sideLen, dir,
                                         GSFParticle::State::COORDINATOR, 0, -1, 0);
 
+    insert(coordinator);
 
     // example for initiating shift
     //    auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
@@ -123,18 +142,22 @@ GSFSystem::GSFSystem(int sideLen, QString expanddir){
     //    coordinator->putToken(token);
     //
 
-    insert(coordinator);
 
-    auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
+//    auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
 
-    if(expanddir == "l"){
-        expandToken->_left = true;
-    } else {
-        expandToken->_left = false;
-    }
+//    if(expanddir == "l"){
+//        expandToken->_left = true;
+//    } else {
+//        expandToken->_left = false;
+//    }
 
-    coordinator->putToken(expandToken);
+//    coordinator->putToken(expandToken);
 
+
+    auto intermediateToken = std::make_shared<GSFParticle::intermediate_TriggerIntermediateToken>();
+    intermediateToken->_l = l;
+
+    coordinator->putToken(intermediateToken);
 
     current = current.nodeInDir(dir%6);
     initializeTriangle(sideLen, current, dir);
