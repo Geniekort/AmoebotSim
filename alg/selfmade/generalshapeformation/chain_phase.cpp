@@ -183,20 +183,20 @@ void GSFParticle::chain_handleContractToken()
 void GSFParticle::chain_handleMovementInitToken()
 {
     _ldrlabel = -1;
-    auto token = takeToken<chain_MovementInitToken>();
+    auto initToken = takeToken<chain_MovementInitToken>();
 
     //pass token to next particle along the side of the triangle if necissary
     //and put chaintoken on this particle
-    if(hasNbrAtLabel(token->_dirpassed) && token->_lifetime>0){
-        token->_lifetime--;
-        int dir = token->_dirpassed;
-        nbrAtLabel(dir).putToken(token);
+    if(hasNbrAtLabel(initToken->_dirpassed) && initToken->_lifetime>0){
+        initToken->_lifetime--;
+        int dir = initToken->_dirpassed;
+        nbrAtLabel(dir).putToken(initToken);
     }
 
     // Make a chain token, which initiates the chain movement
     auto chainToken = std::make_shared<chain_ChainToken>();
-    chainToken->_contract = token->_contract;
-    chainToken->L = token->L;
+    chainToken->_contract = initToken->_contract;
+    chainToken->L = initToken->L;
 
 
     putToken(chainToken);
@@ -204,12 +204,14 @@ void GSFParticle::chain_handleMovementInitToken()
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
         _state = State::CHAIN_COORDINATOR;
-        int followerDir = (hasNbrAtLabel((token->_dirpassed + 2) % 6) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6);
+
+        // TODO: FIX DIRECTION TO NOT DEPEND ON hasNbr
+        int followerDir = initToken->_followerDir;
         Q_ASSERT(hasNbrAtLabel(followerDir));
 
-        auto t = std::make_shared<chain_DepthToken>();
-        t->_passeddir = followerDir;
-        nbrAtLabel(followerDir).putToken(t);
+        auto depthToken = std::make_shared<chain_DepthToken>();
+        depthToken->_passeddir = followerDir;
+        nbrAtLabel(followerDir).putToken(depthToken);
     }
 }
 

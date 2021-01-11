@@ -69,14 +69,15 @@ protected:
         struct triangle_expand_TriggerExpandToken :public Token {bool _left; bool _initated = false;};
 
         // Used to inform all particles at a side of the triangle of the initiated expansion
-        struct triangle_expand_ExpandToken :public Token {int _level; int _movementdir; int _dirpassed; int _confirmationdir;};
+        struct triangle_expand_ExpandToken :public Token {int _level; int _movementdir; int _dirpassed; int _confirmationdir; bool _left;};
 
         // Used to confirm the coordinator of a succesful triangle expansion, from the last particlein the triangle edge
         struct triangle_expand_ConfirmExpandToken :public Token {int _dirpassed;};
 
-        // debug token:
+        // Token to initialize a movement from a chain.
+        //  _followerDir => The direction in which chain coordinators are to seek followers
         struct chain_MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
-                                               bool _contract; int _level;};
+                                               bool _contract; int _level; int _followerDir;};
         //used to initiate chain movement
         //L: the path that the chain should follow
         //_contract: whether or not the chain should be fully contracted at the end

@@ -47,10 +47,19 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
             expandToken->_dirpassed = dirpassed;
             expandToken->_movementdir = movementDir;
             expandToken->_confirmationdir = confirmationDir;
+            expandToken->_left = triggerToken->_left;
 
-            // Pass token to first particle in the chain
             if(hasNbrAtLabel(dirpassed)){
+                // Pass token to first particle in the chain
                 nbrAtLabel(dirpassed).putToken(expandToken);
+            }else{
+                // If no such particle is present, we are apparently a single-particle triangle, so rotate does not mean anything: "finish"
+                takeToken<triangle_expand_TriggerExpandToken>();
+                if(expandToken->_left){
+                    _triangleDirection = (_triangleDirection + 5) % 6;
+                }else{
+                    _triangleDirection = (_triangleDirection + 1) % 6;
+                }
             }
         }
     }
@@ -100,6 +109,12 @@ void GSFParticle::triangle_expand_createMovementInitToken(std::shared_ptr<triang
     movementToken->_dirpassed = expandToken->_dirpassed;
     for(int i = 0; i < expandToken->_level; i++){
         movementToken->L.push(expandToken->_movementdir);
+    }
+
+    if(expandToken->_left){
+        movementToken->_followerDir = (expandToken->_dirpassed + 2) % 6;
+    }else{
+        movementToken->_followerDir = (expandToken->_dirpassed + 4) % 6;
     }
 
     putToken(movementToken);

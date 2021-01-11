@@ -85,7 +85,9 @@ QString GSFParticle::inspectionText() const{
         text += "has triangle_shift_CoordinatorToken\n";
     }
     if (hasToken<triangle_shift_ShiftToken>()){
+        auto token = peekAtToken<triangle_shift_ShiftToken>();
         text += "has shiftToken\n";
+        text += "  _dirpassed: " + QString::number(token->_dirpassed) +"\n";
     }
     if(hasToken<chain_DepthToken>()){
         text+= "has depthToken\n";
@@ -109,7 +111,10 @@ QString GSFParticle::inspectionText() const{
         text+= "has a triangle_expand_ExpandToken\n";
     }
     if(hasToken<chain_MovementInitToken>()){
+        auto token = peekAtToken<chain_MovementInitToken>();
         text+= "has a chain_MovementInitToken\n";
+        text += "  _dirpassed: " + QString::number(token->_dirpassed) +"\n";
+        text += "  _followerDir: " + QString::number(token->_followerDir) +"\n";
     }
     if(hasToken<chain_CutoffToken>()){
         text+= "has a chain_CutoffToken\n";

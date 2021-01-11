@@ -169,9 +169,6 @@ void GSFParticle::intermediate_activate_7(std::shared_ptr<intermediate_TriggerIn
     }
 }
 
-
-
-
 // Forward the leadership by removing TriggerIntermediateToken, and forwarding it to a neighbor
 //  and also updating the required variables for a leader.
 void GSFParticle::forwardLeadership(std::shared_ptr<intermediate_TriggerIntermediateToken> token, int dir){
@@ -197,13 +194,19 @@ void GSFParticle::rotateA(QString nextStep, std::shared_ptr<intermediate_Trigger
             cutoffDir = _triangleDirection;
         }
 
-        // Start cutoff if not yet started
-        if(!nbrAtLabel(cutoffDir).hasToken<chain_CutoffToken>()){
-            auto cutoffToken = std::make_shared<GSFParticle::chain_CutoffToken>();
-            cutoffToken->_dirpassed = cutoffDir;
-            qDebug() << "Passing cutoff token to ";
-            qDebug() << cutoffDir;
-            nbrAtLabel(cutoffDir).putToken(cutoffToken);
+        if(hasNbrAtLabel(cutoffDir)){
+            // Start cutoff if not yet started
+            if(!nbrAtLabel(cutoffDir).hasToken<chain_CutoffToken>()){
+                auto cutoffToken = std::make_shared<GSFParticle::chain_CutoffToken>();
+                cutoffToken->_dirpassed = cutoffDir;
+                qDebug() << "Passing cutoff token to ";
+                qDebug() << cutoffDir;
+                nbrAtLabel(cutoffDir).putToken(cutoffToken);
+            }
+        }else{
+            // We are a 1-particle triangle, skip to next step:
+            triggerToken->_step = nextStep;
+            triggerToken->_initiated = false;
         }
     }
 }

@@ -111,54 +111,20 @@ void GSFParticle::triangle_shift_passCoordinatorToken(std::shared_ptr<triangle_s
         // pass token on the left side of the triangle, else right side
         int passTo = (shiftToken->_left) ? _triangleDirection : (_triangleDirection + 1) % 6;
         shiftToken->_dirpassed = passTo;
-        nbrAtLabel(passTo).putToken(shiftToken);
+        if(hasNbrAtLabel(passTo)){
+            nbrAtLabel(passTo).putToken(shiftToken);
+        }else{
+            // If we are shifting just one particle, already put the confirm.
+            auto confirmToken = std::make_shared<triangle_shift_ConfirmShiftToken>();
+            confirmToken->_dirpassed = (passTo + 3) % 6;
+            putToken(confirmToken);
+        }
 
         // Move the chain with movement init token
         triangle_shift_createMovementInitToken(shiftToken);
 
-    }
-    else {
-        // if shift direction is not left or right, pass the coordinator token to the
-        // correct triangle vertex
-
-        // direction to pass the coordinator token to
-        int passCoordTo = -1;
-        // shift direction relative to passCoordTo i.e. in terms of passCoordTo
-        int relShiftdir = -1;
-
-        /*
-         * Determine the direction to which the coordinator should be passed
-         */
-
-        // move coordinator state to left bottom vertex
-        if (!hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 3) % 6) && hasNbrAtLabel((moveDir + 2) % 6)) {
-        // if pointing left upwards
-            passCoordTo = (moveDir + 2) % 6;
-            relShiftdir = 4;
-        }
-        else if (hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 5) % 6) && !hasNbrAtLabel((moveDir + 3) % 6)) {
-        // if pointing right downwards
-            passCoordTo = (moveDir + 5) % 6;
-            relShiftdir = 1;
-        }
-        // move coordinator state to right bottom vertex
-        else if (!hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 3) % 6) && hasNbrAtLabel((moveDir + 4) % 6)) {
-        // if pointing right upwards
-            passCoordTo = (moveDir + 4) % 6;
-            relShiftdir = 2;
-        }
-        else if (hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 1) % 6) && !hasNbrAtLabel((moveDir + 3) % 6)) {
-        // if pointing left downwards
-            passCoordTo = (moveDir + 1) % 6;
-            relShiftdir = 5;
-        }
-        Q_ASSERT(passCoordTo >= 0 && relShiftdir >= 0);
-
-        auto coordToken = std::make_shared<triangle_shift_CoordinatorToken>();
-        coordToken->_dirpassed = passCoordTo;
-        coordToken->_relShiftdir = relShiftdir;
-        nbrAtLabel(passCoordTo).putToken(coordToken);
-        _state = State::CHAIN_FOLLOWER;
+    }else{
+        // TODO
     }
 }
 
@@ -170,5 +136,8 @@ void GSFParticle::triangle_shift_createMovementInitToken(std::shared_ptr<triangl
     movementToken->_dirpassed = shiftToken->_dirpassed;
     int dir = (shiftToken->_left) ? (shiftToken->_dirpassed + 5) % 6 : (shiftToken->_dirpassed + 1) % 6;
     movementToken->L.push(dir);
+
+    movementToken->_followerDir = (dir + 3) % 6;
+
     putToken(movementToken);
 }
