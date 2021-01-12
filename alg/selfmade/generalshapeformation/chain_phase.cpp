@@ -256,6 +256,7 @@ void GSFParticle::chain_handleConfirmContractToken()
             }
         }
     }else if(isContracted() && (_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR)){
+
         if(hasToken<chain_ConfirmResetChainToken>()){
             auto _ = takeToken<chain_ConfirmResetChainToken>();
             auto token = takeToken<chain_ChainToken>();
@@ -288,8 +289,9 @@ void GSFParticle::chain_handleResetChainTokens(){
 
         if(hasToken<chain_ConfirmResetChainToken>()){
             auto confirmToken = takeToken<chain_ConfirmResetChainToken>();
-            nbrAtLabel(_ldrlabel).putToken(confirmToken);
-
+            if(hasNbrAtLabel(_ldrlabel)){
+                    nbrAtLabel(_ldrlabel).putToken(confirmToken);
+            }
             // Reset particle completely from chain movement
             _ldrlabel = -1;
         }
