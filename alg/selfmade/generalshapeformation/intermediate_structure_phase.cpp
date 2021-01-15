@@ -215,12 +215,12 @@ void GSFParticle::rotateA(QString nextStep, std::shared_ptr<intermediate_Trigger
 void GSFParticle::rotateB(QString nextStep, std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken){
     if(!triggerToken->_initiated){
         // Initialize rotation
-        auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
+        auto expandToken = std::make_shared<GSFParticle::triangle_rotate_TriggerExpandToken>();
         // Move left if up=true, or else right
         expandToken->_left = triggerToken->_up;
         putToken(expandToken);
         triggerToken->_initiated = true;
-    }else if(!hasToken<triangle_expand_TriggerExpandToken>()){
+    }else if(!hasToken<triangle_rotate_TriggerExpandToken>()){
         // Rotation is done
         triggerToken->_step = nextStep;
         triggerToken->_initiated = false;

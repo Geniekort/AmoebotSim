@@ -35,11 +35,9 @@ class GSFParticle:public AmoebotParticle{
         int headMarkDir() const override;
         int tailMarkColor() const override;
 
-
         QString inspectionText() const override;
 
         GSFParticle& nbrAtLabel(int label) const;
-
 
         int findFollower();
 
@@ -56,23 +54,17 @@ protected:
         //used for chain movement
         bool _sent_pull = false;
 
-        //add tokens
-
-        // TRIANGLE EXPAND tokens:
-
-        // CHAIN tokens:
-
         // Used to initialize a triangle expansions from a coordinator
         // _left => expand the triangle at the left leg, looking at the triangle with the leader on top.
         // !_left => expand the triangle at the right leg, looking at the triangle with the leader on top.
         // _initiated <=> the triangle expansion has been initiated
-        struct triangle_expand_TriggerExpandToken :public Token {bool _left; bool _initated = false;};
+        struct triangle_rotate_TriggerExpandToken :public Token {bool _left; bool _initated = false;};
 
         // Used to inform all particles at a side of the triangle of the initiated expansion
-        struct triangle_expand_ExpandToken :public Token {int _level; int _movementdir; int _dirpassed; int _confirmationdir; bool _left;};
+        struct triangle_rotate_ExpandToken :public Token {int _level; int _movementdir; int _dirpassed; int _confirmationdir; bool _left;};
 
         // Used to confirm the coordinator of a succesful triangle expansion, from the last particlein the triangle edge
-        struct triangle_expand_ConfirmExpandToken :public Token {int _dirpassed;};
+        struct triangle_rotate_ConfirmExpandToken :public Token {int _dirpassed;};
 
         // Token to initialize a movement from a chain.
         //  _followerDir => The direction in which chain coordinators are to seek followers
@@ -104,12 +96,14 @@ protected:
         struct chain_CutoffToken : public Token{int _dirpassed; bool _handled = false;};
         struct chain_ConfirmCutoffToken : public Token{int _dirpassed;};
 
+        // Tokens used to perform the shift movement
         struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated=false;};
         struct triangle_shift_ShiftToken: public Token{int _left; int _dirpassed;};
         struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _relShiftdir; bool _shiftDone=false;};
         struct triangle_shift_ConfirmShiftToken: public Token{int _dirpassed;};
 
         // _l: the desired height of the intermediate structure. _step: in which phase the process is currently (as documented in the report
+        // _step: the current step that the intermediate structure formation is in.
         // _up: whether we are in the phase where the triangle was initially pointing upwards.
         // _running_l: used in step 1b, to keep track of how many steps are taken up already
         // _initiated: to indicate whether a step is already initiated (and particle is waiting), or should still be initiated. Only used in some specific steps.
@@ -119,35 +113,37 @@ protected:
     private:
         friend class GSFSystem;
 
+        // Helper methods to perform the chain Movement primitive
         void chain_handleContractToken();
         void chain_handleMovementInitToken();
         void chain_handleDepthToken();
         void chain_handleConfirmContractToken();
+        void chain_handleCutoffToken();
+        void chain_handleConfirmCutoffToken();
 
-        void triangle_expand_activate();
+        // Helper methods to perform the shift Movement primitive
         void triangle_shift_activate();
-
         void triangle_shift_coordinatorActivate();
         void triangle_shift_particleActivate();
         void triangle_shift_passCoordinatorToken(std::shared_ptr<triangle_shift_TriggerShiftToken> triggerToken);
         void triangle_shift_createMovementInitToken(std::shared_ptr<triangle_shift_ShiftToken> shiftToken);
 
-        void triangle_expand_coordinatorActivate();
-        void triangle_expand_particleActivate();
-        void triangle_expand_createMovementInitToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
-        void triangle_expand_forwardExpandToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
+        // Helper methods to perform the triangle rotation Movement primitive
+        void triangle_rotate_activate();
+        void triangle_rotate_coordinatorActivate();
+        void triangle_rotate_particleActivate();
+        void triangle_rotate_createMovementInitToken(std::shared_ptr<triangle_rotate_ExpandToken> expandToken);
+        void triangle_rotate_forwardExpandToken(std::shared_ptr<triangle_rotate_ExpandToken> expandToken);
+        void triangle_rotate_handleTriggerExpandToken();
+        void triangle_rotate_handleConfirmExpandToken();
 
-        void triangle_expand_handleTriggerExpandToken();
-        void triangle_expand_handleConfirmExpandToken();
-
+        // Helper methods to perform the procedure to form the intermediate structure using movement primitives.
         void intermediate_activate();
         void intermediate_activate_1a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
         void intermediate_activate_1b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
         void forwardLeadership(std::shared_ptr<intermediate_TriggerIntermediateToken> token, int dir);
         void intermediate_activate_2a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
         void intermediate_activate_2b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
-        void chain_handleCutoffToken();
-        void chain_handleConfirmCutoffToken();
         void intermediate_activate_3(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
         void intermediate_activate_4a(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
         void intermediate_activate_4b(std::shared_ptr<intermediate_TriggerIntermediateToken> triggerToken);
@@ -166,6 +162,7 @@ class GSFSystem:public AmoebotSystem{
 
 
 private:
+        // Create a triangle of side length sideLen
         void initializeTriangle(int sideLen, Node current, int dir);
 };
 

@@ -179,7 +179,7 @@ void GSFParticle::chain_handleContractToken()
     }
 }
 
-// FOR DEBUG PURPOSES ONLY
+// Handle the MovementInit token which is placed here by some procedure that requires the Chain Movement primitive.
 void GSFParticle::chain_handleMovementInitToken()
 {
     _ldrlabel = -1;
@@ -204,8 +204,6 @@ void GSFParticle::chain_handleMovementInitToken()
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
         _state = State::CHAIN_COORDINATOR;
-
-        // TODO: FIX DIRECTION TO NOT DEPEND ON hasNbr
         int followerDir = initToken->_followerDir;
         Q_ASSERT(hasNbrAtLabel(followerDir));
 

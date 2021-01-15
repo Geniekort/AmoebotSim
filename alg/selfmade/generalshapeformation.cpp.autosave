@@ -20,7 +20,7 @@ void GSFParticle::activate(){
     intermediate_activate();
     chain_activate();
     triangle_shift_activate();
-    triangle_expand_activate();
+    triangle_rotate_activate();
 }
 
 GSFParticle& GSFParticle::nbrAtLabel(int label) const {
@@ -96,17 +96,17 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<chain_ConfirmResetChainToken>()){
         text+= "has chain_ConfirmResetChainToken\n";
     }
-    if(hasToken<triangle_expand_TriggerExpandToken>()){
-        text+= "has triangle_expand_TriggerExpandToken\n";
+    if(hasToken<triangle_rotate_TriggerExpandToken>()){
+        text+= "has triangle_rotate_TriggerExpandToken\n";
     }
     if(hasToken<triangle_shift_ConfirmShiftToken>()){
         text+= "has triangle_shift_ConfirmShiftToken\n";
     }
-    if(hasToken<triangle_expand_ConfirmExpandToken>()){
-        text+= "has triangle_expand_ConfirmExpandToken\n";
+    if(hasToken<triangle_rotate_ConfirmExpandToken>()){
+        text+= "has triangle_rotate_ConfirmExpandToken\n";
     }
-    if(hasToken<triangle_expand_ExpandToken>()){
-        text+= "has a triangle_expand_ExpandToken\n";
+    if(hasToken<triangle_rotate_ExpandToken>()){
+        text+= "has a triangle_rotate_ExpandToken\n";
     }
     if(hasToken<chain_MovementInitToken>()){
         auto token = peekAtToken<chain_MovementInitToken>();
