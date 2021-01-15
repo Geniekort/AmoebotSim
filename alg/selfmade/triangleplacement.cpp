@@ -277,7 +277,6 @@ TriangleParticle& TriangleParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TriangleParticle>(label);
 }
 
-//TODO set orientation to something else than 0
 TriangleSystem::TriangleSystem(int sideLen){
     int dir  = 4;
     std::set<Node> occupied;

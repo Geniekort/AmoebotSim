@@ -192,7 +192,7 @@ class GeneralShapeFormationAlg : public Algorithm{
         GeneralShapeFormationAlg();
 
     public slots:
-        void instantiate(unsigned int sideLen, QString expanddir);
+        void instantiate(unsigned int sideLen, unsigned int l);
 };
 
 class AlgorithmList {

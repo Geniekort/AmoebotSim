@@ -283,14 +283,16 @@ void TriangleAlgo::instantiate(unsigned int sideLen){
 GeneralShapeFormationAlg::GeneralShapeFormationAlg():
     Algorithm("A General Shape Formation", "gsf"){
     addParameter("side length", "6");
-    addParameter("expand-direction", "l");
+    addParameter("L (height)", "2");
 }
 
-void GeneralShapeFormationAlg::instantiate(unsigned int sideLen, QString expanddir){
+void GeneralShapeFormationAlg::instantiate(unsigned int sideLen, unsigned int l){
     if(sideLen <= 0){
         emit log("SideLen should be > 0");
-    } else {
-        emit setSystem(std::make_shared<GSFSystem>(sideLen, expanddir));
+    } else if(l > sideLen) {
+        emit log("SideLen should be > L");
+    }else{
+        emit setSystem(std::make_shared<GSFSystem>(sideLen, l));
     }
 }
 
