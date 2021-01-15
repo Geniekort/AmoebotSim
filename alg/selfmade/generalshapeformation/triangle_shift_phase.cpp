@@ -103,7 +103,7 @@ void GSFParticle::triangle_shift_passCoordinatorToken(std::shared_ptr<triangle_s
     int moveDir = triggerToken->_dir;
 
     if ((_triangleDirection + 5) % 6 == moveDir || (_triangleDirection + 2) % 6 == moveDir) {
-        // do this only if triangle has to move left or right from perspective of coordinator
+        // if triangle has to move left or right from perspective of coordinator
 
         auto shiftToken = std::make_shared<triangle_shift_ShiftToken>();
         shiftToken->_left = (_triangleDirection + 5) % 6 == moveDir;
@@ -124,7 +124,8 @@ void GSFParticle::triangle_shift_passCoordinatorToken(std::shared_ptr<triangle_s
         triangle_shift_createMovementInitToken(shiftToken);
 
     }else{
-        // TODO
+        // if a shift_coordinator, distinct from the coordinator has to be appointed
+        // WARN: Temporarily removed, since implementation was conflicting with the formation of intermediate structure. Can be implemented again if necessary.
     }
 }
 
