@@ -1,23 +1,23 @@
 #include "../generalshapeformation.h"
 
-void GSFParticle::triangle_expand_activate(){
+void GSFParticle::triangle_rotate_activate(){
     if(_state == State::COORDINATOR){
-        triangle_expand_coordinatorActivate();
+        triangle_rotate_coordinatorActivate();
     }else{
-        triangle_expand_particleActivate();
+        triangle_rotate_particleActivate();
     }
     return;
 }
 
-void GSFParticle::triangle_expand_coordinatorActivate(){
-    if(hasToken<triangle_expand_TriggerExpandToken>()){
-        auto triggerToken = peekAtToken<triangle_expand_TriggerExpandToken>();
+void GSFParticle::triangle_rotate_coordinatorActivate(){
+    if(hasToken<triangle_rotate_TriggerExpandToken>()){
+        auto triggerToken = peekAtToken<triangle_rotate_TriggerExpandToken>();
         if(triggerToken->_initated){
-            if(hasToken<triangle_expand_ConfirmExpandToken>()){
+            if(hasToken<triangle_rotate_ConfirmExpandToken>()){
                 // Coordinator particle was waiting for confirmation, and received at now. So terminate expand operation
                 //  and update triangleDirection
-                takeToken<triangle_expand_ConfirmExpandToken>();
-                auto expandToken = takeToken<triangle_expand_TriggerExpandToken>();
+                takeToken<triangle_rotate_ConfirmExpandToken>();
+                auto expandToken = takeToken<triangle_rotate_TriggerExpandToken>();
                 if(expandToken->_left){
                     _triangleDirection = (_triangleDirection + 5) % 6;
                 }else{
@@ -42,7 +42,7 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
                 confirmationDir = (movementDir + 2) % 6;
             }
 
-            auto expandToken = std::make_shared<triangle_expand_ExpandToken>();
+            auto expandToken = std::make_shared<triangle_rotate_ExpandToken>();
             expandToken->_level = 1;
             expandToken->_dirpassed = dirpassed;
             expandToken->_movementdir = movementDir;
@@ -54,7 +54,7 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
                 nbrAtLabel(dirpassed).putToken(expandToken);
             }else{
                 // If no such particle is present, we are apparently a single-particle triangle, so rotate does not mean anything: "finish"
-                takeToken<triangle_expand_TriggerExpandToken>();
+                takeToken<triangle_rotate_TriggerExpandToken>();
                 if(expandToken->_left){
                     _triangleDirection = (_triangleDirection + 5) % 6;
                 }else{
@@ -66,34 +66,34 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
 }
 
 /**
- * Handle triangle_expand for a non-coordinator
+ * Handle triangle_rotate for a non-coordinator
  * */
-void GSFParticle::triangle_expand_particleActivate(){
+void GSFParticle::triangle_rotate_particleActivate(){
 
-    if(hasToken<triangle_expand_ExpandToken>()){
-        std::shared_ptr<triangle_expand_ExpandToken> expandToken = takeToken<triangle_expand_ExpandToken>();
-        triangle_expand_createMovementInitToken(expandToken);
+    if(hasToken<triangle_rotate_ExpandToken>()){
+        std::shared_ptr<triangle_rotate_ExpandToken> expandToken = takeToken<triangle_rotate_ExpandToken>();
+        triangle_rotate_createMovementInitToken(expandToken);
 
-        triangle_expand_forwardExpandToken(expandToken);
+        triangle_rotate_forwardExpandToken(expandToken);
     }
 
-    if(hasToken<triangle_expand_ConfirmExpandToken>()){
-        triangle_expand_handleConfirmExpandToken();
+    if(hasToken<triangle_rotate_ConfirmExpandToken>()){
+        triangle_rotate_handleConfirmExpandToken();
     }
 }
 
 /**
  * Forward the confirmation token towards the coordinator, iff you are no longer a chain_coordinator, meaning your chain has finished moving.
- * @brief GSFParticle::triangle_expand_handleConfirmExpandToken
+ * @brief GSFParticle::triangle_rotate_handleConfirmExpandToken
  * @param confirmToken
  */
-void GSFParticle::triangle_expand_handleConfirmExpandToken(){
+void GSFParticle::triangle_rotate_handleConfirmExpandToken(){
     if(_state != State::CHAIN_COORDINATOR && !hasToken<chain_MovementInitToken>()){
-        auto confirmToken = peekAtToken<triangle_expand_ConfirmExpandToken>();
+        auto confirmToken = peekAtToken<triangle_rotate_ConfirmExpandToken>();
         //  If you are not a chain coordinator anymore, but have the confirm expand token, you are done and can confirm (or pass confirmation).
         int dirpassed = confirmToken->_dirpassed;
         if(hasNbrAtLabel(dirpassed)){
-            confirmToken = takeToken<triangle_expand_ConfirmExpandToken>();
+            confirmToken = takeToken<triangle_rotate_ConfirmExpandToken>();
             nbrAtLabel(dirpassed).putToken(confirmToken);
         }
     }
@@ -102,7 +102,7 @@ void GSFParticle::triangle_expand_handleConfirmExpandToken(){
 /**
  * Create the MovementInitToken to start the movement along the path required for triangle expansion
  * */
-void GSFParticle::triangle_expand_createMovementInitToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken){
+void GSFParticle::triangle_rotate_createMovementInitToken(std::shared_ptr<triangle_rotate_ExpandToken> expandToken){
     auto movementToken = std::make_shared<chain_MovementInitToken>();
     movementToken->_contract = true;
     movementToken->_lifetime = 0;
@@ -121,13 +121,13 @@ void GSFParticle::triangle_expand_createMovementInitToken(std::shared_ptr<triang
 }
 
 
-void GSFParticle::triangle_expand_forwardExpandToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken){
+void GSFParticle::triangle_rotate_forwardExpandToken(std::shared_ptr<triangle_rotate_ExpandToken> expandToken){
     if(hasNbrAtLabel(expandToken->_dirpassed)){
         expandToken->_level++;
         nbrAtLabel(expandToken->_dirpassed).putToken(expandToken);
     }else{
         // This particle is the last in the triangle edge
-        auto confirmToken = std::make_shared<triangle_expand_ConfirmExpandToken>();
+        auto confirmToken = std::make_shared<triangle_rotate_ConfirmExpandToken>();
         confirmToken->_dirpassed = expandToken->_confirmationdir;
         putToken(confirmToken);
 
